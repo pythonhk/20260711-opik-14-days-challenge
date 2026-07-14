@@ -1,0 +1,371 @@
+from __future__ import annotations
+
+import json
+from collections.abc import Sequence
+from typing import Any
+from http.client import RemoteDisconnected
+
+import pytest
+
+from hkpug_challenge.dataset import load_public_cases
+import hkpug_challenge.fireworks as fireworks
+from hkpug_challenge.fireworks import (
+    Completion,
+    FireworksClient,
+    TransientFireworksError,
+)
+from hkpug_challenge.models import Message
+from hkpug_challenge.playground import (
+    FIXED_SYSTEM_PROMPT,
+    PlaygroundCase,
+    run_playground,
+)
+
+
+class FakeCompletionClient:
+    def __init__(self, responses: Sequence[str]) -> None:
+        self._responses = iter(responses)
+        self.calls: list[tuple[tuple[Message, ...], int, dict[str, object] | None]] = []
+
+    def complete(
+        self,
+        messages: tuple[Message, ...],
+        *,
+        max_tokens: int,
+        response_format: dict[str, object] | None = None,
+    ) -> Completion:
+        self.calls.append((messages, max_tokens, response_format))
+        return Completion(
+            content=next(self._responses),
+            prompt_tokens=100,
+            completion_tokens=20,
+        )
+
+
+def test_fireworks_client_forces_non_reasoning_deepseek_requests() -> None:
+    captured: dict[str, Any] = {}
+
+    def fake_transport(
+        url: str, headers: dict[str, str], payload: dict[str, Any], timeout: float
+    ) -> dict[str, Any]:
+        captured.update(
+            url=url,
+            headers=headers,
+            payload=payload,
+            timeout=timeout,
+        )
+        return {
+            "choices": [{"message": {"content": '{"ok":true}'}}],
+            "usage": {"prompt_tokens": 12, "completion_tokens": 4},
+        }
+
+    client = FireworksClient(api_key="test-key", transport=fake_transport)
+    response_format: dict[str, object] = {
+        "type": "json_schema",
+        "json_schema": {
+            "name": "result",
+            "schema": {
+                "type": "object",
+                "properties": {"ok": {"type": "boolean"}},
+                "required": ["ok"],
+                "additionalProperties": False,
+            },
+        },
+    }
+    result = client.complete(
+        ({"role": "user", "content": "Return JSON."},),
+        max_tokens=77,
+        response_format=response_format,
+    )
+
+    assert result == Completion(
+        content='{"ok":true}', prompt_tokens=12, completion_tokens=4
+    )
+    assert captured["url"] == "https://api.fireworks.ai/inference/v1/chat/completions"
+    assert captured["headers"]["Authorization"] == "Bearer test-key"
+    assert captured["payload"] == {
+        "model": "accounts/fireworks/models/deepseek-v4-flash",
+        "messages": [{"role": "user", "content": "Return JSON."}],
+        "temperature": 0,
+        "seed": 0,
+        "max_tokens": 77,
+        "reasoning_effort": "none",
+        "response_format": response_format,
+    }
+
+
+def test_fireworks_client_uses_low_reasoning_for_gpt_oss_experiments() -> None:
+    captured: dict[str, Any] = {}
+
+    def fake_transport(
+        _url: str,
+        _headers: dict[str, str],
+        payload: dict[str, Any],
+        _timeout: float,
+    ) -> dict[str, Any]:
+        captured.update(payload)
+        return {
+            "choices": [{"message": {"content": '{"ok":true}'}}],
+            "usage": {"prompt_tokens": 12, "completion_tokens": 4},
+        }
+
+    client = FireworksClient(
+        api_key="test-key",
+        model="accounts/fireworks/models/gpt-oss-20b",
+        transport=fake_transport,
+    )
+
+    client.complete(
+        ({"role": "user", "content": "Return JSON."},), max_tokens=77
+    )
+
+    assert captured["reasoning_effort"] == "low"
+
+
+def test_fireworks_client_reports_safe_shape_for_reasoning_only_response() -> None:
+    def reasoning_only_transport(
+        _url: str,
+        _headers: dict[str, str],
+        _payload: dict[str, Any],
+        _timeout: float,
+    ) -> dict[str, Any]:
+        return {
+            "choices": [
+                {
+                    "finish_reason": "length",
+                    "message": {
+                        "role": "assistant",
+                        "reasoning_content": "PRIVATE MODEL OUTPUT",
+                    },
+                }
+            ],
+            "usage": {"prompt_tokens": 12, "completion_tokens": 64},
+        }
+
+    client = FireworksClient(
+        api_key="test-key",
+        model="accounts/fireworks/models/gpt-oss-20b",
+        transport=reasoning_only_transport,
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match=(
+            r"missing completion fields.*model=accounts/fireworks/models/gpt-oss-20b"
+            r".*content_type=missing.*reasoning_content_present=True"
+            r".*finish_reason=length"
+        ),
+    ) as error:
+        client.complete(
+            ({"role": "user", "content": "Return JSON."},), max_tokens=77
+        )
+
+    assert "PRIVATE MODEL OUTPUT" not in str(error.value)
+
+
+def test_fireworks_client_can_convert_reasoning_only_response_to_empty_content() -> None:
+    def reasoning_only_transport(
+        _url: str,
+        _headers: dict[str, str],
+        _payload: dict[str, Any],
+        _timeout: float,
+    ) -> dict[str, Any]:
+        return {
+            "choices": [
+                {
+                    "finish_reason": "length",
+                    "message": {
+                        "role": "assistant",
+                        "reasoning_content": "PRIVATE MODEL OUTPUT",
+                    },
+                }
+            ],
+            "usage": {"prompt_tokens": 12, "completion_tokens": 64},
+        }
+
+    client = FireworksClient(
+        api_key="test-key",
+        model="accounts/fireworks/models/gpt-oss-20b",
+        empty_on_missing_content=True,
+        transport=reasoning_only_transport,
+    )
+
+    assert client.complete(
+        ({"role": "user", "content": "Return JSON."},), max_tokens=77
+    ) == Completion(content="", prompt_tokens=12, completion_tokens=64)
+
+
+def test_fireworks_client_retries_a_transient_timeout() -> None:
+    transport_calls = 0
+    delays: list[float] = []
+    retries: list[tuple[int, int]] = []
+
+    def flaky_transport(
+        _url: str,
+        _headers: dict[str, str],
+        _payload: dict[str, object],
+        _timeout: float,
+    ) -> dict[str, object]:
+        nonlocal transport_calls
+        transport_calls += 1
+        if transport_calls == 1:
+            raise TimeoutError("read timed out")
+        return {
+            "choices": [{"message": {"content": '{"ok":true}'}}],
+            "usage": {"prompt_tokens": 12, "completion_tokens": 4},
+        }
+
+    client = FireworksClient(
+        api_key="test-key",
+        transport=flaky_transport,
+        retry_budget=2,
+        sleep=delays.append,
+        on_retry=lambda current, total: retries.append((current, total)),
+    )
+
+    result = client.complete(
+        ({"role": "user", "content": "Return JSON."},), max_tokens=77
+    )
+
+    assert result.content == '{"ok":true}'
+    assert transport_calls == 2
+    assert delays == [1.0]
+    assert retries == [(1, 2)]
+
+
+def test_fireworks_client_does_not_retry_a_non_transient_failure() -> None:
+    transport_calls = 0
+
+    def rejected_transport(
+        _url: str,
+        _headers: dict[str, str],
+        _payload: dict[str, object],
+        _timeout: float,
+    ) -> dict[str, object]:
+        nonlocal transport_calls
+        transport_calls += 1
+        raise RuntimeError("Fireworks returned HTTP 400")
+
+    client = FireworksClient(api_key="test-key", transport=rejected_transport)
+
+    with pytest.raises(RuntimeError, match="HTTP 400"):
+        client.complete(({"role": "user", "content": "Return JSON."},), max_tokens=77)
+
+    assert transport_calls == 1
+
+
+def test_post_json_classifies_remote_disconnect_as_transient(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def disconnected_urlopen(*_args: Any, **_kwargs: Any) -> Any:
+        raise RemoteDisconnected("Remote end closed connection without response")
+
+    monkeypatch.setattr(fireworks, "urlopen", disconnected_urlopen)
+
+    with pytest.raises(TransientFireworksError, match="Remote end closed"):
+        fireworks._post_json(
+            "https://example.test",
+            {},
+            {},
+            1,
+        )
+
+
+def test_playground_run_reveals_discovery_but_only_aggregates_holdout() -> None:
+    cases = load_public_cases()
+    selected = (
+        PlaygroundCase(cases[0], "discovery"),
+        PlaygroundCase(cases[5], "discovery"),
+        PlaygroundCase(cases[10], "holdout"),
+    )
+    answers = [_valid_answer(case.case.evidence_ids) for case in selected]
+    judge = json.dumps(
+        {
+            "answer_relevance": 80,
+            "instruction_following": 90,
+            "faithfulness": 70,
+            "reasons": {
+                "answer_relevance": "Addresses the requested decision.",
+                "instruction_following": "Uses the required JSON contract.",
+                "faithfulness": "Claims are supported by cited context.",
+            },
+        }
+    )
+    responses = [item for answer in answers for item in (answer, judge)]
+    client = FakeCompletionClient(responses)
+
+    result = run_playground(
+        system_prompt="Use only evidence and return the requested JSON.",
+        cases=selected,
+        client=client,
+    )
+
+    assert len(client.calls) == 6
+    assert [max_tokens for _messages, max_tokens, _format in client.calls] == [
+        256,
+        384,
+        256,
+        384,
+        256,
+        384,
+    ]
+    assert all(client.calls[index][2] is not None for index in (1, 3, 5))
+    assert result["discovery"]["case_count"] == 2
+    assert len(result["discovery"]["cases"]) == 2
+    assert "output" in result["discovery"]["cases"][0]
+    assert "reasons" in result["discovery"]["cases"][0]
+    assert result["holdout"]["case_count"] == 1
+    assert "cases" not in result["holdout"]
+    assert "output" not in json.dumps(result["holdout"])
+    assert result["discovery"]["score"] == 87.0
+    assert result["holdout"]["score"] == 87.0
+    assert result["overall_score"] == 87.0
+    assert "system_prompt" not in result
+    assert result["prompt_sha256"]
+    answer_messages = client.calls[0][0]
+    assert answer_messages[0]["content"] == FIXED_SYSTEM_PROMPT
+    assert (
+        "Use only evidence and return the requested JSON."
+        in answer_messages[1]["content"]
+    )
+
+
+def test_playground_structure_scores_distinguish_bad_prompt_output() -> None:
+    cases = load_public_cases()
+    selected = (
+        PlaygroundCase(cases[0], "discovery"),
+        PlaygroundCase(cases[5], "holdout"),
+    )
+    judge = json.dumps(
+        {
+            "answer_relevance": 20,
+            "instruction_following": 0,
+            "faithfulness": 10,
+            "reasons": {
+                "answer_relevance": "Only partly addresses the question.",
+                "instruction_following": "Does not follow the JSON contract.",
+                "faithfulness": "Provides unsupported claims.",
+            },
+        }
+    )
+    client = FakeCompletionClient(["I think so.", judge, "No.", judge])
+
+    result = run_playground(
+        system_prompt="Reply casually.",
+        cases=selected,
+        client=client,
+    )
+
+    assert result["overall_score"] == 6.5
+    assert result["discovery"]["criteria"]["json_schema"] == 0.0
+
+
+def _valid_answer(evidence_ids: frozenset[str]) -> str:
+    citation = sorted(evidence_ids)[0]
+    return json.dumps(
+        {
+            "answer": "Use the documented policy outcome.",
+            "citations": [citation],
+            "escalate": False,
+        }
+    )
