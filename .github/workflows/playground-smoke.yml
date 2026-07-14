@@ -1,0 +1,56 @@
+name: Playground smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      prompt_mode:
+        description: Prompt used by the smoke run
+        required: true
+        default: baseline
+        type: choice
+        options:
+          - baseline
+          - weak-control
+
+permissions:
+  contents: read
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out trusted playground code
+        uses: actions/checkout@v4
+        with:
+          ref: organizer
+          path: trusted
+          persist-credentials: false
+
+      - name: Record organizer revision
+        working-directory: trusted
+        run: |
+          set -euo pipefail
+          echo "Organizer revision: $(git rev-parse HEAD)"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Run real-model tournament proof
+        working-directory: trusted/.github/tournament
+        env:
+          FIREWORKS_API_KEY: ${{ secrets.FIREWORKS_API_KEY }}
+        run: |
+          prompt_path="../../starter/prompt.example.txt"
+          if [[ "${{ inputs.prompt_mode }}" == "weak-control" ]]; then
+            prompt_path="../../starter/prompt.weak-control.txt"
+          fi
+          uv run --frozen python scripts/run_playground.py --prompt-path "$prompt_path"
+
+      - name: Upload participant-safe result
+        uses: actions/upload-artifact@v4
+        with:
+          name: playground-result
+          path: trusted/.github/tournament/.local/playground/run.json
+          retention-days: 1
+          if-no-files-found: error

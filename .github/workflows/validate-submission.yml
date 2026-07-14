@@ -1,0 +1,73 @@
+name: Validate submission
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+    paths:
+      - submission/submission.zip
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: validate-submission-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    if: github.event.pull_request.base.ref == 'main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out trusted base code
+        uses: actions/checkout@v4
+        with:
+          ref: organizer
+          path: trusted
+          persist-credentials: false
+
+      - name: Record organizer revision
+        working-directory: trusted
+        run: |
+          set -euo pipefail
+          echo "Organizer revision: $(git rev-parse HEAD)"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Validate changed paths from GitHub
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          EXPECTED_HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
+          EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}" > /tmp/pr.json
+          test "$(jq -r .head.repo.full_name /tmp/pr.json)" = "$EXPECTED_HEAD_REPOSITORY"
+          test "$(jq -r .head.sha /tmp/pr.json)" = "$EXPECTED_HEAD_SHA"
+          gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files?per_page=100" > /tmp/pr-files.json
+          cd trusted/.github/tournament
+          uv run --frozen python scripts/validate_pr_files.py --files-json /tmp/pr-files.json
+
+      - name: Check out immutable participant files
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: untrusted
+          fetch-depth: 1
+          persist-credentials: false
+          sparse-checkout: |
+            submission/submission.zip
+          sparse-checkout-cone-mode: false
+
+      - name: Validate encrypted submission envelope
+        working-directory: trusted/.github/tournament
+        run: >-
+          uv run --frozen python scripts/validate_submission.py
+          --submission-archive ../../../untrusted/submission/submission.zip
+          --allowlist-path team_allowlist.json
+          --tournament-ca-cert-path public_keys/tournament_ca_cert.pem
+          --scorer-cert-path public_keys/scorer_cert.pem

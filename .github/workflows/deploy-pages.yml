@@ -1,0 +1,55 @@
+name: Deploy participant Pages
+
+on:
+  push:
+    branches:
+      - leaderboard
+    paths:
+      - .github/tournament/dashboard/**
+  workflow_call:
+    inputs:
+      leaderboard_ref:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      leaderboard_ref:
+        description: Leaderboard branch or commit to deploy
+        required: true
+        default: leaderboard
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+  pages: write
+
+concurrency:
+  cancel-in-progress: false
+  group: pages
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out leaderboard
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.leaderboard_ref || 'leaderboard' }}
+          persist-credentials: false
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload dashboard
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .github/tournament/dashboard
+
+      - name: Deploy Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
