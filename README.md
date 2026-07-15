@@ -4,10 +4,10 @@ Improve one support-answer prompt over as many as eight scored attempts. Each
 attempt returns encrypted feedback that your team can inspect in Opik before
 revising the next prompt.
 
-[Six-case mini workshop](https://alex-au-922.github.io/hkpug-opik-14-days-challenge/tutorial/) |
-[First submission guide](https://alex-au-922.github.io/hkpug-opik-14-days-challenge/start/) |
-[Submission feedback guide](https://alex-au-922.github.io/hkpug-opik-14-days-challenge/submission-feedback/) |
-[Live leaderboard](https://alex-au-922.github.io/hkpug-opik-14-days-challenge/leaderboard/)
+[Six-case mini workshop](https://pythonhk.github.io/20260711-opik-14-days-challenge/tutorial/) |
+[First submission guide](https://pythonhk.github.io/20260711-opik-14-days-challenge/start/) |
+[Submission feedback guide](https://pythonhk.github.io/20260711-opik-14-days-challenge/submission-feedback/) |
+[Live leaderboard](https://pythonhk.github.io/20260711-opik-14-days-challenge/leaderboard/)
 
 ## Rules
 
@@ -16,16 +16,25 @@ revising the next prompt.
 - A submission pull request must change only `submission/submission.zip`.
 - Keep your team private key and plaintext prompt out of Git.
 
+## Challenge setting
+
+Your team is improving HarbourCloud's support copilot. The same submitted
+system prompt is tested across 50 policy-heavy support cases: 40 discovery
+cases and 10 hidden holdout cases. DeepSeek V4 Flash produces each answer with
+temperature 0 and seed 0. Deterministic checks and Qwen 3.7 Plus then score the
+output contract, citations, evidence coverage, escalation, relevance,
+instruction following, and faithfulness.
+
 ## First submission
 
 New to Opik? Complete the
-[six-case mini workshop](https://alex-au-922.github.io/hkpug-opik-14-days-challenge/tutorial/)
+[six-case mini workshop](https://pythonhk.github.io/20260711-opik-14-days-challenge/tutorial/)
 first. It includes a public local-Opik dataset, the original 24 workshop
 questions, Python case files, and revealable answers.
 
 Download `hkpug-opik-helper` for your platform from the
-[latest release](https://github.com/alex-au-922/hkpug-opik-14-days-challenge/releases/latest).
-The [first submission tutorial](https://alex-au-922.github.io/hkpug-opik-14-days-challenge/start/)
+[latest release](https://github.com/pythonhk/20260711-opik-14-days-challenge/releases/latest).
+The [first submission tutorial](https://pythonhk.github.io/20260711-opik-14-days-challenge/start/)
 has installation steps for macOS, Linux, and Windows.
 
 Start with the example prompt, then edit `submission/prompt.txt`:
@@ -75,6 +84,6 @@ hkpug-opik-helper decrypt \
 hkpug-opik-helper load
 ```
 
-Follow the [submission feedback guide](https://alex-au-922.github.io/hkpug-opik-14-days-challenge/submission-feedback/)
+Follow the [submission feedback guide](https://pythonhk.github.io/20260711-opik-14-days-challenge/submission-feedback/)
 for setup and review guidance. The practice cases are in [`public`](public), and
 the supplied prompts are in [`starter`](starter).
