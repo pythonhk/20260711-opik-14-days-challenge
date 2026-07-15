@@ -12,7 +12,7 @@ from hkpug_challenge.fireworks import (
     FireworksClient,
     validate_scoring_models,
 )
-from hkpug_challenge.scoring import score_prompt
+from hkpug_challenge.scoring import MAX_RUN_TOKENS, score_prompt
 from hkpug_challenge.submission import verify_submission
 from hkpug_challenge.traces import write_trace_bundle
 
@@ -33,6 +33,16 @@ def parse_args() -> argparse.Namespace:
         "--max-calls",
         type=int,
         default=int(os.environ.get("MAX_FIREWORKS_CALLS_PER_RUN", "100")),
+    )
+    parser.add_argument(
+        "--max-run-tokens",
+        type=int,
+        default=int(
+            os.environ.get(
+                "MAX_ESTIMATED_INPUT_TOKENS_PER_RUN",
+                str(MAX_RUN_TOKENS),
+            )
+        ),
     )
     return parser.parse_args()
 
@@ -77,6 +87,7 @@ def main() -> int:
             candidate_model=candidate_model,
             judge_model=judge_model,
             max_calls=args.max_calls,
+            max_run_tokens=args.max_run_tokens,
             on_case_start=_log_progress,
         )
         _write_outputs(args.output, result)

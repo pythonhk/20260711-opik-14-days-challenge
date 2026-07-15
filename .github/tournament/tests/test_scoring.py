@@ -612,7 +612,7 @@ def test_score_prompt_uses_documented_default_run_token_limit(tmp_path: Path) ->
     )
     judge_client = FakeCompletionClient([])
 
-    with pytest.raises(ValueError, match="500000 token limit"):
+    with pytest.raises(ValueError, match="1000000 token limit"):
         score_prompt(
             team_id="team-01",
             attempt=1,

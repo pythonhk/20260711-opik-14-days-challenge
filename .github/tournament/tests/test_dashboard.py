@@ -96,7 +96,7 @@ def test_root_page_is_a_participant_focused_challenge_overview() -> None:
     assert 'href="tutorial/"' in html
     assert 'href="leaderboard/"' in html
     assert "Eight total" in html
-    assert "Eight maximum" in html
+    assert "Two maximum" in html
     assert "Four maximum" not in html
     for noise in (
         "Public data",
@@ -357,9 +357,10 @@ def test_submission_feedback_guide_explains_the_tournament_trace_contract() -> N
         "and an <code>evaluation.judge</code> span for the evaluation."
     ) in html
     assert (
-        "Use the seven score columns to find a pattern: JSON schema, Citation "
-        "validity, Evidence coverage, Escalation, Answer relevance, Instruction "
-        "following, and Faithfulness."
+        "Use the seven score columns to find a pattern: Output contract "
+        "(<code>JSON schema</code> in the bundle), Citation validity, Evidence "
+        "coverage, Escalation, Answer relevance, Instruction following, and "
+        "Faithfulness."
     ) in html
 
 
@@ -418,7 +419,7 @@ def test_leaderboard_has_semantic_structure_and_required_states() -> None:
         "team-detail",
         "criterion-breakdown",
     } <= parser.ids
-    assert "../styles.css" in parser.links
+    assert "../styles.css?v=11" in parser.links
     assert "app.js?v=10" in parser.scripts
     assert "No scored attempts yet" in html
     assert "could not be loaded" in html
@@ -445,6 +446,7 @@ def test_dashboard_styles_include_responsive_and_focus_treatment() -> None:
     styles = (DASHBOARD / "styles.css").read_text(encoding="utf-8")
 
     assert "@media (max-width: 720px)" in styles
+    assert ".site-nav {\n    flex-wrap: wrap;" in styles
     assert ":focus-visible" in styles
     assert "prefers-reduced-motion" in styles
     assert "letter-spacing: 0" in styles
@@ -456,7 +458,7 @@ def test_seed_leaderboard_is_valid_public_empty_state() -> None:
 
     assert leaderboard.schema_version == 1
     assert leaderboard.challenge.max_attempts == 8
-    assert leaderboard.challenge.max_daily_attempts == 8
+    assert leaderboard.challenge.max_daily_attempts == 2
     assert leaderboard.challenge.weights.discovery == 0.75
     assert leaderboard.challenge.weights.holdout == 0.25
     assert leaderboard.teams == ()

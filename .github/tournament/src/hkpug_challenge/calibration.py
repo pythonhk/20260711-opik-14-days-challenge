@@ -294,25 +294,23 @@ def run_calibration(
             case_scores.append(profile_case_scores)
             continue
         case_callback = _case_callback(profile.name, on_progress)
-        score_args = {
-            "team_id": "organizer-calibration",
-            "attempt": attempt,
-            "run_id": f"calibration-{profile.name}",
-            "participant_prompt": profile.prompt,
-            "cases": bank.cases,
-            "public_directory": public_directory,
-            "candidate_client": candidate_client,
-            "judge_client": judge_client,
-            "candidate_model": candidate_model,
-            "judge_model": judge_model,
-            "max_calls": 100,
-            "max_run_tokens": MAX_RUN_TOKENS,
-            "include_holdout_details": True,
-            "on_case_start": case_callback,
-        }
-        if allow_experimental_candidate:
-            score_args["allow_experimental_candidate"] = True
-        raw_result = score(**score_args)
+        raw_result = score(
+            team_id="organizer-calibration",
+            attempt=attempt,
+            run_id=f"calibration-{profile.name}",
+            participant_prompt=profile.prompt,
+            cases=bank.cases,
+            public_directory=public_directory,
+            candidate_client=candidate_client,
+            judge_client=judge_client,
+            candidate_model=candidate_model,
+            judge_model=judge_model,
+            max_calls=100,
+            max_run_tokens=MAX_RUN_TOKENS,
+            include_holdout_details=True,
+            on_case_start=case_callback,
+            allow_experimental_candidate=allow_experimental_candidate,
+        )
         profile_result, profile_case_scores = _parse_profile_result(
             profile=profile,
             raw_result=raw_result,

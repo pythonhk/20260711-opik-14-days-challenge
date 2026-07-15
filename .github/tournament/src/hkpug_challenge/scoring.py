@@ -36,7 +36,7 @@ from .playground import FIXED_SYSTEM_PROMPT
 
 DISCOVERY_WEIGHT = 0.75
 HOLDOUT_WEIGHT = 0.25
-MAX_RUN_TOKENS = 500_000
+MAX_RUN_TOKENS = 1_000_000
 JUDGE_MAX_TOKENS = 1_536
 JUDGE_WEIGHTS = {
     "answer_relevance": 0.20,
@@ -520,9 +520,9 @@ def _parse_judge(response: str, *, case: EvaluationCase) -> _JudgePayload:
 
 def _validation_location(value: object) -> str:
     if isinstance(value, tuple):
-        parts = value
+        parts = cast(tuple[object, ...], value)
     elif isinstance(value, list):
-        parts = tuple(value)
+        parts = tuple(cast(list[object], value))
     else:
         parts = (value,)
     return ".".join(str(part) for part in parts) or "<root>"

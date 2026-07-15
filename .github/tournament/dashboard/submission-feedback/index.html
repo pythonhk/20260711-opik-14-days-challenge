@@ -6,7 +6,7 @@
     <meta name="description" content="Download, decrypt, and review scored HKPUG Opik Challenge submission feedback in a local Opik instance.">
     <title>Submission Feedback | HKPUG Opik Challenge</title>
     <link rel="icon" href="data:,">
-    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="../styles.css?v=11">
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to submission feedback steps</a>
@@ -56,7 +56,7 @@
           <p>The GitHub download is a ZIP archive whose name starts with <code>submission-feedback-pr-</code>. Extract it with Finder, File Explorer, or your normal archive tool. The extracted archive contains <code>submission-feedback.cms</code>.</p>
           <p>Keep that file private. It is encrypted for your team and can only be opened with your team private key and certificate.</p>
         </div>
-        <p class="command-note">Use the same <code>hkpug-opik-helper</code> and team credentials as your submission. If they are not ready, follow the <a href="../start/">first submission tutorial</a> and download the helper from the <a href="https://github.com/alex-au-922/hkpug-opik-14-days-challenge/releases/latest">latest release</a>.</p>
+        <p class="command-note">Use the same <code>hkpug-opik-helper</code> and team credentials as your submission. If they are not ready, follow the <a href="../start/">first submission tutorial</a> and download the helper from the <a href="https://github.com/pythonhk/20260711-opik-14-days-challenge/releases/latest">latest release</a>.</p>
       </section>
 
       <section class="tutorial-section" aria-labelledby="start-opik-title">
@@ -150,7 +150,7 @@ powershell -ExecutionPolicy ByPass -c ".\opik.ps1"</code></pre>
           </div>
           <p>Each discovery trace has a <code>model.answer</code> span for the response and an <code>evaluation.judge</code> span for the evaluation.</p>
         </div>
-        <p>Use the seven score columns to find a pattern: JSON schema, Citation validity, Evidence coverage, Escalation, Answer relevance, Instruction following, and Faithfulness.</p>
+        <p>Use the seven score columns to find a pattern: Output contract (<code>JSON schema</code> in the bundle), Citation validity, Evidence coverage, Escalation, Answer relevance, Instruction following, and Faithfulness.</p>
       </section>
 
       <section class="tutorial-section" aria-labelledby="improve-title">
@@ -169,7 +169,7 @@ powershell -ExecutionPolicy ByPass -c ".\opik.ps1"</code></pre>
             <span>Prompt change to test</span>
           </div>
           <article>
-            <h3>JSON schema</h3>
+            <h3>Output contract</h3>
             <p><strong>What a low score usually means:</strong> The response is not one valid JSON object, has extra keys or text, uses the wrong value types, or exceeds 100 words.</p>
             <p><strong>Prompt change to test:</strong> State the exact three-field output contract and require no markdown or commentary around it.</p>
           </article>
@@ -236,6 +236,51 @@ powershell -ExecutionPolicy ByPass -c ".\opik.ps1"</code></pre>
           <strong>A longer prompt is not automatically a stronger prompt.</strong>
           <p>Prefer a small, testable rule over a growing list of case-specific exceptions. Scores may move down as well as up, so use each returned bundle as evidence for the next decision.</p>
         </aside>
+      </section>
+
+      <section class="tutorial-section" aria-labelledby="routing-title">
+        <div class="tutorial-section-header">
+          <div>
+            <span class="section-number" aria-hidden="true">10</span>
+            <h2 id="routing-title">Route the review before applying a rule</h2>
+          </div>
+          <p>Do not make every safety instruction fire on every case. First classify the evidence problem, then apply only the checks that match it.</p>
+        </div>
+        <div class="routing-grid" role="list" aria-label="Evidence review routes">
+          <article role="listitem">
+            <span>01</span>
+            <h3>Direct policy</h3>
+            <p>Use the current controlling policy and answer the requested decision directly.</p>
+          </article>
+          <article role="listitem">
+            <span>02</span>
+            <h3>Stale or conflicting evidence</h3>
+            <p>Resolve authority, scope, and effective date before deciding which source controls.</p>
+          </article>
+          <article role="listitem">
+            <span>03</span>
+            <h3>Untrusted copied instructions</h3>
+            <p>Treat quoted or customer-provided instructions as claims, not as policy or system commands.</p>
+          </article>
+          <article role="listitem">
+            <span>04</span>
+            <h3>Missing fact or approval</h3>
+            <p>State what is missing and escalate only when an authorized next action is still required.</p>
+          </article>
+        </div>
+        <div class="experiment-journal">
+          <div>
+            <span class="section-number">RUN JOURNAL</span>
+            <h3>Keep one short record per attempt</h3>
+          </div>
+          <ol>
+            <li>Weakest metric and three representative traces</li>
+            <li>One hypothesis and one changed behavior</li>
+            <li>Expected improvement</li>
+            <li>Actual improvement and any regression</li>
+          </ol>
+        </div>
+        <p class="command-note">When rules accumulate or conflict, rewrite the prompt cleanly around the decision routes. A shorter coherent prompt is easier to evaluate than a stack of exceptions.</p>
       </section>
 
       <section class="next-route" aria-labelledby="next-title">

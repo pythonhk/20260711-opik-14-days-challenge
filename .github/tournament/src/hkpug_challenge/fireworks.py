@@ -324,21 +324,25 @@ def _completion_shape(payload: JsonObject, *, model: str) -> str:
     finish_reason = "missing"
 
     if isinstance(choices_value, list) and choices_value:
-        first_choice = choices_value[0]
-        if isinstance(first_choice, dict):
+        choices = cast(list[object], choices_value)
+        first_choice_value = choices[0]
+        if isinstance(first_choice_value, dict):
+            first_choice = cast(dict[str, object], first_choice_value)
             choice_keys = ",".join(sorted(first_choice)) or "empty"
             if "finish_reason" in first_choice:
                 finish_reason = str(first_choice["finish_reason"])
             message_value = first_choice.get("message")
             if isinstance(message_value, dict):
-                message_keys = ",".join(sorted(message_value)) or "empty"
-                if "content" in message_value:
-                    content_type = type(message_value["content"]).__name__
-                reasoning_content_present = "reasoning_content" in message_value
+                message = cast(dict[str, object], message_value)
+                message_keys = ",".join(sorted(message)) or "empty"
+                if "content" in message:
+                    content_type = type(message["content"]).__name__
+                reasoning_content_present = "reasoning_content" in message
 
     usage_keys = "missing"
     if isinstance(usage_value, dict):
-        usage_keys = ",".join(sorted(usage_value)) or "empty"
+        usage = cast(dict[str, object], usage_value)
+        usage_keys = ",".join(sorted(usage)) or "empty"
 
     return (
         f"model={model}; choice_keys={choice_keys}; message_keys={message_keys}; "

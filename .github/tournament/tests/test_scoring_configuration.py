@@ -20,7 +20,7 @@ def test_tournament_models_have_distinct_supported_fireworks_defaults() -> None:
 
 
 def test_scoring_uses_the_documented_run_token_budget() -> None:
-    assert MAX_RUN_TOKENS == 500_000
+    assert MAX_RUN_TOKENS == 1_000_000
 
 
 def test_trusted_scoring_passes_repository_model_variables_to_the_scorer() -> None:
@@ -32,6 +32,11 @@ def test_trusted_scoring_passes_repository_model_variables_to_the_scorer() -> No
 
     assert "FIREWORKS_MODEL: ${{ vars.FIREWORKS_MODEL }}" in score_step
     assert "JUDGE_MODEL: ${{ vars.JUDGE_MODEL }}" in score_step
+    assert (
+        "MAX_ESTIMATED_INPUT_TOKENS_PER_RUN: "
+        "${{ vars.MAX_ESTIMATED_INPUT_TOKENS_PER_RUN }}"
+        in score_step
+    )
     assert "FIREWORKS_JUDGE_MODEL" not in score_step
     assert (
         'test "$FIREWORKS_MODEL" = "accounts/fireworks/models/deepseek-v4-flash"'
@@ -40,6 +45,7 @@ def test_trusted_scoring_passes_repository_model_variables_to_the_scorer() -> No
     assert (
         'test "$JUDGE_MODEL" = "accounts/fireworks/models/qwen3p7-plus"' in score_step
     )
+    assert 'test "$MAX_ESTIMATED_INPUT_TOKENS_PER_RUN" = "1000000"' in score_step
 
 
 def test_score_script_requires_explicit_model_configuration(

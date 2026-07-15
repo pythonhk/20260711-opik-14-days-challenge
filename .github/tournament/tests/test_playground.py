@@ -263,7 +263,7 @@ def test_post_json_classifies_remote_disconnect_as_transient(
     monkeypatch.setattr(fireworks, "urlopen", disconnected_urlopen)
 
     with pytest.raises(TransientFireworksError, match="Remote end closed"):
-        fireworks._post_json(
+        fireworks._post_json(  # pyright: ignore[reportPrivateUsage]
             "https://example.test",
             {},
             {},

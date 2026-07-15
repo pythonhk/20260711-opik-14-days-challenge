@@ -17,7 +17,7 @@ concurrency:
 
 env:
   MAX_ATTEMPTS: ${{ vars.MAX_ATTEMPTS }}
-  MAX_DAILY_ATTEMPTS: 8
+  MAX_DAILY_ATTEMPTS: 2
   LEADERBOARD_BRANCH: ${{ vars.LEADERBOARD_BRANCH }}
   LEADERBOARD_DIR: ${{ github.workspace }}/leaderboard-site
 
@@ -165,7 +165,7 @@ jobs:
         run: |
           set -euo pipefail
           [[ "$MAX_ATTEMPTS" == "8" ]]
-          [[ "$MAX_DAILY_ATTEMPTS" == "8" ]]
+          [[ "$MAX_DAILY_ATTEMPTS" == "2" ]]
           test "$HEAD_SHA" = "$VERIFIED_HEAD_SHA"
           install -d -m 700 /tmp/private
           if [[ -s "$LEADERBOARD_DIR/state/events.jsonl.cms" ]]; then
@@ -215,12 +215,14 @@ jobs:
           FIREWORKS_MODEL: ${{ vars.FIREWORKS_MODEL }}
           JUDGE_MODEL: ${{ vars.JUDGE_MODEL }}
           MAX_FIREWORKS_CALLS_PER_RUN: ${{ vars.MAX_FIREWORKS_CALLS_PER_RUN }}
+          MAX_ESTIMATED_INPUT_TOKENS_PER_RUN: ${{ vars.MAX_ESTIMATED_INPUT_TOKENS_PER_RUN }}
           DISCOVERY_FEEDBACK_MODE: full_trace
           HOLDOUT_FEEDBACK_MODE: aggregate_only
         run: |
           set -euo pipefail
           test "$FIREWORKS_MODEL" = "accounts/fireworks/models/deepseek-v4-flash"
           test "$JUDGE_MODEL" = "accounts/fireworks/models/qwen3p7-plus"
+          test "$MAX_ESTIMATED_INPUT_TOKENS_PER_RUN" = "1000000"
           test "$DISCOVERY_FEEDBACK_MODE" = full_trace
           test "$HOLDOUT_FEEDBACK_MODE" = aggregate_only
           openssl cms -decrypt -binary -inform DER \

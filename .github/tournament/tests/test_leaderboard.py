@@ -90,10 +90,11 @@ def test_reservations_are_idempotent_and_limited_to_eight_per_team() -> None:
     assert len(reservations) == MAX_ATTEMPTS
 
 
-def test_all_eight_reservations_may_be_used_in_one_hong_kong_day() -> None:
+def test_only_two_reservations_may_be_used_in_one_hong_kong_day() -> None:
     events: tuple[LeaderboardEvent, ...] = ()
     first_day = datetime(2026, 7, 12, 15, 0, tzinfo=timezone.utc)
-    assert MAX_DAILY_ATTEMPTS == MAX_ATTEMPTS == 8
+    assert MAX_DAILY_ATTEMPTS == 2
+    assert MAX_ATTEMPTS == 8
 
     for sequence in range(1, MAX_DAILY_ATTEMPTS + 1):
         events, reservation = reserve_attempt(
@@ -110,7 +111,34 @@ def test_all_eight_reservations_may_be_used_in_one_hong_kong_day() -> None:
         )
         assert reservation.attempt == sequence
 
-    assert len(events) == MAX_ATTEMPTS
+    with pytest.raises(AttemptLimitExceeded, match="two attempts per day"):
+        reserve_attempt(
+            events,
+            team_id="group-01",
+            display_name="Group 01",
+            submission_identity=make_submission_identity(
+                team_id="group-01",
+                prompt_sha256=_digest("daily-3"),
+                head_sha=f"{3:040x}",
+            ),
+            reserved_at=first_day + timedelta(minutes=30),
+            timezone="Asia/Hong_Kong",
+        )
+
+    next_day_events, reservation = reserve_attempt(
+        events,
+        team_id="group-01",
+        display_name="Group 01",
+        submission_identity=make_submission_identity(
+            team_id="group-01",
+            prompt_sha256=_digest("next-day"),
+            head_sha=f"{4:040x}",
+        ),
+        reserved_at=first_day + timedelta(days=1),
+        timezone="Asia/Hong_Kong",
+    )
+    assert reservation.attempt == 3
+    assert len(next_day_events) == 3
 
 
 def test_scoring_appends_once_and_conflicting_replays_fail() -> None:
