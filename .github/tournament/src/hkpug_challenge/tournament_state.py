@@ -134,9 +134,24 @@ def reserve_submission(
     prompt_sha256: str,
     head_sha: str,
     reserved_at: datetime,
+    starts_at: datetime,
+    ends_at: datetime,
     timezone: str = "Asia/Hong_Kong",
 ) -> AttemptReserved:
     """Reserve one idempotent attempt and atomically persist the private log."""
+
+    challenge = Challenge(
+        name="HKPUG Opik 14-Day Challenge",
+        starts_at=starts_at,
+        ends_at=ends_at,
+        timezone=timezone,
+    )
+    if reserved_at.tzinfo is None or reserved_at.utcoffset() is None:
+        raise ValueError("reserved_at must include a timezone offset.")
+    if reserved_at < challenge.starts_at:
+        raise ValueError("The tournament has not started.")
+    if reserved_at > challenge.ends_at:
+        raise ValueError("The tournament has ended.")
 
     events = _read_events(events_path)
     identity = make_submission_identity(
@@ -216,6 +231,8 @@ def build_argument_parser() -> argparse.ArgumentParser:
     reserve_parser.add_argument("--prompt-sha256", required=True)
     reserve_parser.add_argument("--head-sha", required=True)
     reserve_parser.add_argument("--reserved-at", required=True, type=_parse_datetime)
+    reserve_parser.add_argument("--starts-at", required=True, type=_parse_datetime)
+    reserve_parser.add_argument("--ends-at", required=True, type=_parse_datetime)
     reserve_parser.add_argument("--timezone", default="Asia/Hong_Kong")
     reserve_parser.add_argument("--output", required=True, type=Path)
 
@@ -242,6 +259,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                 prompt_sha256=args.prompt_sha256,
                 head_sha=args.head_sha,
                 reserved_at=args.reserved_at,
+                starts_at=args.starts_at,
+                ends_at=args.ends_at,
                 timezone=args.timezone,
             )
             _atomic_write(

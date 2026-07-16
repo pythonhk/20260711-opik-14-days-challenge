@@ -385,6 +385,8 @@ def test_trusted_scoring_gates_secrets_and_atomically_reserves_eight_attempts() 
     assert "workflow_run.head_sha" in reserve_step
     assert "prompt_sha256" in reserve_step
     assert "display_name" in reserve_step
+    assert "vars.CHALLENGE_START_AT" in reserve_step
+    assert "vars.CHALLENGE_END_AT" in reserve_step
     assert "submission" in reserve_step.lower()
     assert "gh repo clone" not in reserve_step
     assert "LEADERBOARD_DIR" in reserve_step

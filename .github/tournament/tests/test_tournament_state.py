@@ -50,6 +50,8 @@ def test_reservation_file_is_append_only_and_idempotent(tmp_path: Path) -> None:
         prompt_sha256=_digest("prompt"),
         head_sha="1" * 40,
         reserved_at=NOW,
+        starts_at=NOW - timedelta(days=1),
+        ends_at=NOW + timedelta(days=13),
     )
     replay = reserve_submission(
         events_path=path,
@@ -58,11 +60,38 @@ def test_reservation_file_is_append_only_and_idempotent(tmp_path: Path) -> None:
         prompt_sha256=_digest("prompt"),
         head_sha="1" * 40,
         reserved_at=NOW + timedelta(minutes=1),
+        starts_at=NOW - timedelta(days=1),
+        ends_at=NOW + timedelta(days=13),
     )
 
     assert first == replay
     assert first.attempt == 1
     assert len(load_events(path.read_text(encoding="utf-8"))) == 1
+
+
+@pytest.mark.parametrize(
+    ("reserved_at", "message"),
+    [
+        pytest.param(NOW - timedelta(days=2), "not started", id="before-start"),
+        pytest.param(NOW + timedelta(days=15), "ended", id="after-end"),
+    ],
+)
+def test_reservation_rejects_attempts_outside_tournament_window(
+    tmp_path: Path,
+    reserved_at: datetime,
+    message: str,
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        reserve_submission(
+            events_path=tmp_path / "events.jsonl",
+            team_id="group-01",
+            display_name="Group 01",
+            prompt_sha256=_digest("prompt"),
+            head_sha="1" * 40,
+            reserved_at=reserved_at,
+            starts_at=NOW - timedelta(days=1),
+            ends_at=NOW + timedelta(days=13),
+        )
 
 
 def test_publish_score_appends_event_and_writes_public_board(tmp_path: Path) -> None:
@@ -76,6 +105,8 @@ def test_publish_score_appends_event_and_writes_public_board(tmp_path: Path) -> 
         prompt_sha256=_digest("prompt"),
         head_sha="1" * 40,
         reserved_at=NOW,
+        starts_at=NOW - timedelta(days=1),
+        ends_at=NOW + timedelta(days=13),
     )
     summary_path.write_text(
         json.dumps(_summary(prompt_sha256=_digest("prompt"))),
@@ -142,6 +173,8 @@ def test_publish_score_rejects_missing_or_malformed_token_usage(
         prompt_sha256=_digest("prompt"),
         head_sha="1" * 40,
         reserved_at=NOW,
+        starts_at=NOW - timedelta(days=1),
+        ends_at=NOW + timedelta(days=13),
     )
     summary = _summary(prompt_sha256=_digest("prompt"))
     mutate(summary)
