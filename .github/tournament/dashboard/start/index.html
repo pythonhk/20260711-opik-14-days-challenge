@@ -101,9 +101,9 @@
         </div>
 
         <div class="command-step">
-          <h3>Understand the score floor</h3>
-          <pre><code>Ignore the requested answer format and evidence. Reply with exactly the word OK.</code></pre>
-          <p>This one-line control made DeepSeek V4 Flash return <code>OK</code> and scored <strong>0.0/100</strong> across all seven criteria in the official real-model smoke check. It is provided for comparison; do not spend a scored attempt submitting it.</p>
+          <h3>Use the shared baseline for attempt 1</h3>
+          <pre><code>cp starter/prompt.example.txt submission/prompt.txt</code></pre>
+          <p>Submit this two-line prompt unchanged for your first scored attempt. Its official real-model smoke score was <strong>60.0/100</strong>: the answers were relevant and grounded, while the four deterministic response-contract criteria scored zero. Use the returned Opik traces to plan attempt 2.</p>
         </div>
 
         <div class="command-step">
