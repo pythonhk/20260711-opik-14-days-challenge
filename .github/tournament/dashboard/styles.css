@@ -1816,6 +1816,35 @@ footer p {
   gap: 0 48px;
 }
 
+.answer-contract {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.8fr);
+  gap: 32px;
+  align-items: start;
+  padding: 28px 0 32px;
+  border-top: 2px solid var(--ink);
+}
+
+.answer-contract h3,
+.answer-contract p {
+  margin-top: 0;
+}
+
+.answer-contract ul {
+  margin: 16px 0 0;
+  padding-left: 20px;
+  color: var(--muted);
+}
+
+.answer-contract li + li {
+  margin-top: 8px;
+}
+
+.answer-contract pre {
+  min-height: 100%;
+  margin: 0;
+}
+
 .score-action-guide {
   border-top: 2px solid var(--ink);
 }
@@ -2245,6 +2274,11 @@ footer p {
 }
 
 @media (max-width: 900px) {
+  .answer-contract {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
   .overview-hero,
   .rules-layout,
   .tutorial-hero,

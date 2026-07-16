@@ -371,8 +371,9 @@ def test_submission_feedback_guide_turns_scores_into_targeted_prompt_changes() -
     html, _ = parse_page(page)
 
     for text in (
-        "Improve one weakness at a time",
-        "Fix deterministic failures first",
+            "Improve one weakness at a time",
+            "Exact response contract",
+            "Fix deterministic failures first",
         "Score signal",
         "What a low score usually means",
         "Prompt change to test",
@@ -382,7 +383,10 @@ def test_submission_feedback_guide_turns_scores_into_targeted_prompt_changes() -
         "Escalation",
         "Answer relevance",
         "Instruction following",
-        "Faithfulness",
+            "Faithfulness",
+            '"answer"',
+            '"citations"',
+            '"escalate"',
         "Choose one repeated weakness",
         "Do not optimize one trace in isolation",
         "A longer prompt is not automatically a stronger prompt.",
