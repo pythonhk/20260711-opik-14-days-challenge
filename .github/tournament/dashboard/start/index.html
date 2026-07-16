@@ -6,7 +6,7 @@
     <meta name="description" content="Cross-platform first-submission guide for the HKPUG Opik 14-Day Challenge.">
     <title>First Submission | HKPUG Opik Challenge</title>
     <link rel="icon" href="data:,">
-    <link rel="stylesheet" href="../styles.css?v=11">
+    <link rel="stylesheet" href="../styles.css?v=13">
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to first-submission steps</a>
@@ -38,17 +38,94 @@
             Turn one plaintext prompt into the single encrypted file accepted by the challenge. The same helper and commands work on macOS, Linux, and Windows.
           </p>
         </div>
-        <ol class="tutorial-progress" aria-label="Submission stages">
-          <li><span>1</span>Check your setup</li>
-          <li><span>2</span>Pack and inspect</li>
-          <li><span>3</span>Open a pull request</li>
+        <ol class="tutorial-progress tutorial-progress-four" aria-label="Submission stages">
+          <li><span>1</span>Fork the repository</li>
+          <li><span>2</span>Check your setup</li>
+          <li><span>3</span>Pack and push</li>
+          <li><span>4</span>Open a pull request</li>
         </ol>
+      </section>
+
+      <aside class="registration-gate" aria-label="Registration confirmation required">
+        <div>
+          <p class="eyebrow">Confirmed teams only</p>
+          <h2>Wait for your confirmation email before submitting.</h2>
+        </div>
+        <div>
+          <p>Complete the registration form first. The HKPUG organizers manually select the remaining teams, and only selected teams receive the credentials required by this guide.</p>
+          <a class="button" href="https://forms.gle/YVE4wCwVmCuinnzZA">Open the registration form</a>
+        </div>
+      </aside>
+
+      <section class="tutorial-section" aria-labelledby="fork-title">
+        <div class="tutorial-section-header">
+          <div>
+            <span class="section-number" aria-hidden="true">01</span>
+            <h2 id="fork-title">Fork the challenge repository</h2>
+          </div>
+          <p>Create your own GitHub copy before working locally. Your encrypted submission is pushed to that fork and proposed back to <code>pythonhk/main</code> as a pull request.</p>
+        </div>
+
+        <p class="release-action">
+          <a class="button button-primary" href="https://github.com/pythonhk/20260711-opik-14-days-challenge">Open the official repository</a>
+        </p>
+
+        <ol class="submission-github-steps">
+          <li>
+            <figure>
+              <img src="assets/github-fork-button.jpg" alt="GitHub repository header with the Fork button at the upper right" loading="lazy">
+            </figure>
+            <div>
+              <span class="submission-step-number" aria-hidden="true">1</span>
+              <h3>Select Fork</h3>
+              <p>Open the official <code>pythonhk</code> repository and select <strong>Fork</strong> near the upper-right corner.</p>
+            </div>
+          </li>
+          <li>
+            <figure>
+              <img src="assets/github-create-fork.jpg" alt="GitHub Create a new fork form with Copy the main branch only selected" loading="lazy">
+            </figure>
+            <div>
+              <span class="submission-step-number" aria-hidden="true">2</span>
+              <h3>Create your copy</h3>
+              <p>Choose your GitHub account, keep <strong>Copy the main branch only</strong> selected, and select <strong>Create fork</strong>.</p>
+            </div>
+          </li>
+          <li>
+            <figure>
+              <img src="assets/github-push-submission.jpg" alt="GitHub README lines showing the helper pack command and git commands used to push submission.zip" loading="lazy">
+            </figure>
+            <div>
+              <span class="submission-step-number" aria-hidden="true">3</span>
+              <h3>Push the encrypted ZIP</h3>
+              <p>Clone your fork, run the helper locally, then commit and push only <code>submission/submission.zip</code>. Never commit your plaintext prompt or private key.</p>
+            </div>
+          </li>
+          <li>
+            <figure>
+              <img src="assets/github-open-pull-request.jpg" alt="GitHub comparison page showing base main and one changed file" loading="lazy">
+            </figure>
+            <div>
+              <span class="submission-step-number" aria-hidden="true">4</span>
+              <h3>Create the pull request</h3>
+              <p>Select <strong>Compare &amp; pull request</strong>. Confirm the base is <code>pythonhk/main</code> and GitHub reports <strong>1 file changed</strong>, then select <strong>Create pull request</strong>.</p>
+              <small>The archived verification shown here says <strong>View pull request</strong>; a new participant submission says <strong>Create pull request</strong>.</small>
+            </div>
+          </li>
+        </ol>
+
+        <div class="command-step">
+          <h3>Clone your fork</h3>
+          <pre><code>git clone https://github.com/YOUR-GITHUB-USER/20260711-opik-14-days-challenge.git
+cd 20260711-opik-14-days-challenge</code></pre>
+          <p>Replace <code>YOUR-GITHUB-USER</code> with the account selected on the fork form.</p>
+        </div>
       </section>
 
       <section class="tutorial-section" aria-labelledby="download-title">
         <div class="tutorial-section-header">
           <div>
-            <span class="section-number" aria-hidden="true">01</span>
+            <span class="section-number" aria-hidden="true">02</span>
             <h2 id="download-title">Install the participant helper</h2>
           </div>
           <p>Download the archive for your operating system and processor from the latest release, extract it, and put the executable in a folder on your <code>PATH</code>.</p>
@@ -78,7 +155,7 @@
       <section class="tutorial-section" aria-labelledby="prepare-title">
         <div class="tutorial-section-header">
           <div>
-            <span class="section-number" aria-hidden="true">02</span>
+            <span class="section-number" aria-hidden="true">03</span>
             <h2 id="prepare-title">Check your team setup</h2>
           </div>
           <p>Keep your team ID, private key, and certificate outside the repository. Run this check from the challenge repository before packaging a prompt.</p>
@@ -94,7 +171,7 @@
       <section class="tutorial-section" aria-labelledby="pack-title">
         <div class="tutorial-section-header">
           <div>
-            <span class="section-number" aria-hidden="true">03</span>
+            <span class="section-number" aria-hidden="true">04</span>
             <h2 id="pack-title">Pack one prompt</h2>
           </div>
           <p>Write your prompt in <code>submission/prompt.txt</code>. The helper reads that local file and creates the encrypted submission archive.</p>
@@ -122,7 +199,7 @@
       <section class="tutorial-section" aria-labelledby="submit-title">
         <div class="tutorial-section-header">
           <div>
-            <span class="section-number" aria-hidden="true">04</span>
+            <span class="section-number" aria-hidden="true">05</span>
             <h2 id="submit-title">Open the pull request</h2>
           </div>
           <p>The pull request must contain only the encrypted ZIP. Review the staged path before committing.</p>
