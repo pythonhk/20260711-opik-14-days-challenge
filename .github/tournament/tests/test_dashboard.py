@@ -14,6 +14,7 @@ START = DASHBOARD / "start"
 OPIK = DASHBOARD / "opik"
 TUTORIAL = DASHBOARD / "tutorial"
 SUBMISSION_FEEDBACK = DASHBOARD / "submission-feedback"
+CUSTOM_DOMAIN = "opik-challenge.python.hk"
 
 
 class DashboardParser(HTMLParser):
@@ -76,6 +77,10 @@ class DashboardParser(HTMLParser):
             self._site_nav_text = []
         if tag == "nav" and self._in_site_nav:
             self._in_site_nav = False
+
+
+def test_dashboard_publishes_the_tournament_custom_domain() -> None:
+    assert (DASHBOARD / "CNAME").read_text(encoding="utf-8") == f"{CUSTOM_DOMAIN}\n"
 
 
 def parse_page(path: Path) -> tuple[str, DashboardParser]:
