@@ -15,7 +15,7 @@ from hkpug_challenge.submission import (
 TOURNAMENT_ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_fifteen_team_ids_are_registered_without_placeholder_names() -> None:
+def test_fifteen_team_ids_are_registered_with_allocated_names() -> None:
     allowlist_path = TOURNAMENT_ROOT / "team_allowlist.json"
     allowlist = load_allowlist(allowlist_path)
     participants = [
@@ -25,7 +25,12 @@ def test_fifteen_team_ids_are_registered_without_placeholder_names() -> None:
     assert [entry.team_id for entry in participants] == [
         f"team-{number:02d}" for number in range(1, 16)
     ]
-    assert all(entry.display_name is None for entry in participants)
+    assert {entry.team_id: entry.display_name for entry in participants[:3]} == {
+        "team-01": "Scarlet",
+        "team-02": "OpikOptimizers",
+        "team-03": "MC",
+    }
+    assert all(entry.display_name is None for entry in participants[3:])
 
     ca_certificate = load_certificate(
         TOURNAMENT_ROOT / "public_keys" / "tournament_ca_cert.pem"
