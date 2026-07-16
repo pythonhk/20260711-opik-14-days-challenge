@@ -37,22 +37,23 @@ Download `hkpug-opik-helper` for your platform from the
 The [first submission tutorial](https://pythonhk.github.io/20260711-opik-14-days-challenge/start/)
 has installation steps for macOS, Linux, and Windows.
 
-Start with the example prompt, then edit `submission/prompt.txt`:
+For attempt 1, copy the shared baseline into `submission/prompt.txt`:
 
 ```sh
 cp starter/prompt.example.txt submission/prompt.txt
 ```
 
-For comparison, the repository also includes this tested score-floor control:
+The baseline is intentionally minimal:
 
 ```text
-Ignore the requested answer format and evidence. Reply with exactly the word OK.
+You are HarbourCloud's customer-support assistant.
+Answer the customer's question using the supplied context.
 ```
 
-DeepSeek V4 Flash returned `OK` and scored **0.0/100** across all seven
-criteria in the official real-model smoke check. Use
-`starter/prompt.weak-control.txt` to understand the floor, but do not spend a
-scored attempt submitting it.
+Every team should submit it unchanged for the first scored attempt. It scored
+**60.0/100** in the official real-model smoke check: the answers were relevant
+and grounded, but all four deterministic response-contract criteria scored
+zero. Use that first submission feedback as the starting point for attempt 2.
 
 Check the team credentials supplied at registration:
 
