@@ -192,6 +192,8 @@ jobs:
             --prompt-sha256 "$PROMPT_SHA256" \
             --head-sha "$HEAD_SHA" \
             --reserved-at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --starts-at "${{ vars.CHALLENGE_START_AT }}" \
+            --ends-at "${{ vars.CHALLENGE_END_AT }}" \
             --timezone "${{ vars.TOURNAMENT_TIMEZONE }}" \
             --output /tmp/private/reservation.json
           echo "ALREADY_SCORED=$(jq -r .already_scored /tmp/private/reservation.json)" >> "$GITHUB_ENV"
