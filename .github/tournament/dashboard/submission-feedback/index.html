@@ -159,7 +159,25 @@ powershell -ExecutionPolicy ByPass -c ".\opik.ps1"</code></pre>
             <span class="section-number" aria-hidden="true">08</span>
             <h2 id="improve-title">Improve one weakness at a time</h2>
           </div>
-          <p>Fix deterministic failures first. They account for 40 points and make semantic failures easier to diagnose. Then use the three judge scores to refine the substance of the answer.</p>
+          <p>Start with the exact response contract. Then fix citation and decision mechanics before refining the substance of the answer with the three judge scores.</p>
+        </div>
+
+        <div class="answer-contract" aria-labelledby="answer-contract-title">
+          <div>
+            <h3 id="answer-contract-title">Exact response contract</h3>
+            <p>Every case must return one JSON object and nothing else.</p>
+            <ul>
+              <li><code>answer</code>: a non-empty string of 100 words or fewer.</li>
+              <li><code>citations</code>: a non-empty array of unique evidence IDs copied from the supplied context.</li>
+              <li><code>escalate</code>: a JSON boolean, <code>true</code> or <code>false</code>.</li>
+              <li>No extra keys, markdown fences, or prose outside the object.</li>
+            </ul>
+          </div>
+          <pre aria-label="Valid response example"><code>{
+  "answer": "State the supported conclusion and the decisive reason.",
+  "citations": ["EVIDENCE-ID"],
+  "escalate": false
+}</code></pre>
         </div>
 
         <div class="score-action-guide" role="group" aria-label="Score signals and prompt changes">
