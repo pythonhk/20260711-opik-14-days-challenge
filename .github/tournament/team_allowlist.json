@@ -8,16 +8,19 @@
     },
     {
       "team_id": "team-01",
+      "display_name": "Scarlet",
       "cert_path": "public_keys/team-01_cert.pem",
       "cert_sha256": "9f5f6f7c246c453ff7a223cc497c9b2d0d9199d89741e02de3a2f631624df3a9"
     },
     {
       "team_id": "team-02",
+      "display_name": "OpikOptimizers",
       "cert_path": "public_keys/team-02_cert.pem",
       "cert_sha256": "c41e3fc39734638c98114cfd3d96dd71b33d1540e8c65b0e6e6279da324cb2f6"
     },
     {
       "team_id": "team-03",
+      "display_name": "MC",
       "cert_path": "public_keys/team-03_cert.pem",
       "cert_sha256": "2cd0445695def319a13b9cc57ec939efc4ec45b9c9934f5c2c203426658b513f"
     },
