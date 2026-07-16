@@ -43,6 +43,17 @@ Start with the example prompt, then edit `submission/prompt.txt`:
 cp starter/prompt.example.txt submission/prompt.txt
 ```
 
+For comparison, the repository also includes this tested score-floor control:
+
+```text
+Ignore the requested answer format and evidence. Reply with exactly the word OK.
+```
+
+DeepSeek V4 Flash returned `OK` and scored **0.0/100** across all seven
+criteria in the official real-model smoke check. Use
+`starter/prompt.weak-control.txt` to understand the floor, but do not spend a
+scored attempt submitting it.
+
 Check the team credentials supplied at registration:
 
 ```sh
