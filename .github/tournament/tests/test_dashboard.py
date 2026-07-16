@@ -100,6 +100,10 @@ def test_root_page_is_a_participant_focused_challenge_overview() -> None:
     assert 'href="start/"' in html
     assert 'href="tutorial/"' in html
     assert 'href="leaderboard/"' in html
+    assert 'datetime="2026-07-17T00:00:00+08:00"' in html
+    assert "17 July 2026, 00:00 HKT" in html
+    assert 'datetime="2026-07-30T23:59:59+08:00"' in html
+    assert "30 July 2026, 23:59 HKT" in html
     assert "Eight total" in html
     assert "Two maximum" in html
     assert "Four maximum" not in html
