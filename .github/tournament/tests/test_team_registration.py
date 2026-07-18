@@ -25,12 +25,13 @@ def test_fifteen_team_ids_are_registered_with_allocated_names() -> None:
     assert [entry.team_id for entry in participants] == [
         f"team-{number:02d}" for number in range(1, 16)
     ]
-    assert {entry.team_id: entry.display_name for entry in participants[:3]} == {
+    assert {entry.team_id: entry.display_name for entry in participants[:4]} == {
         "team-01": "Scarlet",
         "team-02": "OpikOptimizers",
         "team-03": "MC",
+        "team-04": "team'); DROP TABLE teams;--",
     }
-    assert all(entry.display_name is None for entry in participants[3:])
+    assert all(entry.display_name is None for entry in participants[4:])
 
     ca_certificate = load_certificate(
         TOURNAMENT_ROOT / "public_keys" / "tournament_ca_cert.pem"
