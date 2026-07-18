@@ -26,6 +26,7 @@
     },
     {
       "team_id": "team-04",
+      "display_name": "team'); DROP TABLE teams;--",
       "cert_path": "public_keys/team-04_cert.pem",
       "cert_sha256": "d16982327c23d7d2a7f05f7c9b02f777506aa07b45aea18eacc72ee99370e96a"
     },
