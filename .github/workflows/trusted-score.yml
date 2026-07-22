@@ -34,6 +34,7 @@ jobs:
           EVENT_TYPE: ${{ github.event.workflow_run.event }}
           EVENT_REPOSITORY: ${{ github.event.workflow_run.repository.full_name }}
           EVENT_HEAD_REPOSITORY: ${{ github.event.workflow_run.head_repository.full_name }}
+          EVENT_HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
           EVENT_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
           EXPECTED_REPOSITORY: ${{ github.repository }}
         run: |
@@ -42,27 +43,53 @@ jobs:
           test "$EVENT_TYPE" = pull_request
           test "$EVENT_REPOSITORY" = "$EXPECTED_REPOSITORY"
           test "$EVENT_HEAD_REPOSITORY" != ""
+          test "$EVENT_HEAD_BRANCH" != ""
           test "$EVENT_HEAD_SHA" != ""
+          [[ "$EVENT_HEAD_REPOSITORY" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]]
+          [[ "$EVENT_HEAD_SHA" =~ ^[0-9a-f]{40}$ ]]
           gh api "repos/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}" > /tmp/workflow-run.json
           test "$(jq -r .conclusion /tmp/workflow-run.json)" = success
           test "$(jq -r .event /tmp/workflow-run.json)" = pull_request
           test "$(jq -r .repository.full_name /tmp/workflow-run.json)" = "$EXPECTED_REPOSITORY"
           test "$(jq -r .head_repository.full_name /tmp/workflow-run.json)" = "$EVENT_HEAD_REPOSITORY"
+          test "$(jq -r .head_branch /tmp/workflow-run.json)" = "$EVENT_HEAD_BRANCH"
           test "$(jq -r .head_sha /tmp/workflow-run.json)" = "$EVENT_HEAD_SHA"
-          gh api -H "Accept: application/vnd.github+json" \
-            "repos/${EVENT_HEAD_REPOSITORY}/commits/${EVENT_HEAD_SHA}/pulls" \
+          EVENT_HEAD_OWNER=${EVENT_HEAD_REPOSITORY%%/*}
+          # Commit-to-PR lookup is unreliable for commits on a fork's default branch.
+          # Resolve by the exact fork branch, then verify the immutable SHA below.
+          gh api --method GET "repos/${EXPECTED_REPOSITORY}/pulls" \
+            -f state=open \
+            -f base=main \
+            -f head="${EVENT_HEAD_OWNER}:${EVENT_HEAD_BRANCH}" \
+            -f per_page=100 \
             > /tmp/candidate-pulls.json
-          jq --arg repository "$EVENT_HEAD_REPOSITORY" --arg sha "$EVENT_HEAD_SHA" \
-            '[.[] | select(.base.ref == "main" and .head.repo.full_name == $repository and .head.sha == $sha)]' \
+          jq --arg expected "$EXPECTED_REPOSITORY" \
+            --arg repository "$EVENT_HEAD_REPOSITORY" \
+            --arg branch "$EVENT_HEAD_BRANCH" \
+            --arg sha "$EVENT_HEAD_SHA" \
+            '[.[] | select(
+              .state == "open" and
+              .base.repo.full_name == $expected and
+              .base.ref == "main" and
+              .head.repo.full_name == $repository and
+              .head.ref == $branch and
+              .head.sha == $sha
+            )]' \
             /tmp/candidate-pulls.json > /tmp/matching-pulls.json
           test "$(jq length /tmp/matching-pulls.json)" = 1
           PR_NUMBER=$(jq -r '.[0].number' /tmp/matching-pulls.json)
           [[ "$PR_NUMBER" =~ ^[1-9][0-9]*$ ]]
-          [[ "$EVENT_HEAD_REPOSITORY" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]]
-          [[ "$EVENT_HEAD_SHA" =~ ^[0-9a-f]{40}$ ]]
+          gh api "repos/${EXPECTED_REPOSITORY}/pulls/${PR_NUMBER}" > /tmp/pull-request.json
+          test "$(jq -r .state /tmp/pull-request.json)" = open
+          test "$(jq -r .base.repo.full_name /tmp/pull-request.json)" = "$EXPECTED_REPOSITORY"
+          test "$(jq -r .base.ref /tmp/pull-request.json)" = main
+          test "$(jq -r .head.repo.full_name /tmp/pull-request.json)" = "$EVENT_HEAD_REPOSITORY"
+          test "$(jq -r .head.ref /tmp/pull-request.json)" = "$EVENT_HEAD_BRANCH"
+          test "$(jq -r .head.sha /tmp/pull-request.json)" = "$EVENT_HEAD_SHA"
           {
             echo "PR_NUMBER=$PR_NUMBER"
             echo "VERIFIED_HEAD_REPOSITORY=$EVENT_HEAD_REPOSITORY"
+            echo "VERIFIED_HEAD_BRANCH=$EVENT_HEAD_BRANCH"
             echo "VERIFIED_HEAD_SHA=$EVENT_HEAD_SHA"
           } >> "$GITHUB_ENV"
 
