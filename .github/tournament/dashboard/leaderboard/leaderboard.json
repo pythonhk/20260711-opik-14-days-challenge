@@ -12,38 +12,38 @@
       "holdout": 0.25
     }
   },
-  "generated_at": "2026-07-23T05:27:21.046000Z",
+  "generated_at": "2026-07-29T14:06:19.985000Z",
   "schema_version": 1,
   "teams": [
     {
-      "attempts_remaining": 5,
-      "attempts_used": 3,
+      "attempts_remaining": 4,
+      "attempts_used": 4,
       "best": {
-        "attempt": 3,
-        "completed_at": "2026-07-23T05:27:21.046000Z",
+        "attempt": 4,
+        "completed_at": "2026-07-29T14:06:19.985000Z",
         "criteria": {
-          "answer_relevance": 15.44,
-          "deterministic": 37.78,
-          "faithfulness": 22.03,
-          "instruction_following": 12.82
+          "answer_relevance": 16.34,
+          "deterministic": 37.38,
+          "faithfulness": 22.46,
+          "instruction_following": 13.21
         },
-        "discovery_score": 87.24,
-        "holdout_score": 90.55,
-        "overall_score": 88.07
+        "discovery_score": 89.14,
+        "holdout_score": 90.17,
+        "overall_score": 89.4
       },
       "display_name": "team'); DROP TABLE teams;--",
       "latest": {
-        "attempt": 3,
-        "completed_at": "2026-07-23T05:27:21.046000Z",
+        "attempt": 4,
+        "completed_at": "2026-07-29T14:06:19.985000Z",
         "criteria": {
-          "answer_relevance": 15.44,
-          "deterministic": 37.78,
-          "faithfulness": 22.03,
-          "instruction_following": 12.82
+          "answer_relevance": 16.34,
+          "deterministic": 37.38,
+          "faithfulness": 22.46,
+          "instruction_following": 13.21
         },
-        "discovery_score": 87.24,
-        "holdout_score": 90.55,
-        "overall_score": 88.07
+        "discovery_score": 89.14,
+        "holdout_score": 90.17,
+        "overall_score": 89.4
       },
       "rank": 1,
       "runs": [
@@ -85,6 +85,19 @@
           "discovery_score": 87.24,
           "holdout_score": 90.55,
           "overall_score": 88.07
+        },
+        {
+          "attempt": 4,
+          "completed_at": "2026-07-29T14:06:19.985000Z",
+          "criteria": {
+            "answer_relevance": 16.34,
+            "deterministic": 37.38,
+            "faithfulness": 22.46,
+            "instruction_following": 13.21
+          },
+          "discovery_score": 89.14,
+          "holdout_score": 90.17,
+          "overall_score": 89.4
         }
       ],
       "team_id": "team-04"
